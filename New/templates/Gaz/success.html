@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+    <link rel="stylesheet" href="{% static 'css/success.css'%}" type="text/css">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Результат</title>
+
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script src="https://malsup.github.io/jquery.form.js"></script>
+    <script src="https://unpkg.com/json5@2/dist/index.min.js"></script>
+
+
+    <script type="text/javascript">
+        console.log('ready');
+
+        window.setTimeout(function() {
+            document.getElementById('arrow_back').style.visibility = 'visible';
+        }, 500);
+
+
+
+        function getParentNode(oThis, sNodeName) {
+                while(oThis.nodeName != sNodeName && oThis.nodeName != 'BODY' )  {
+                    oThis=oThis.parentNode;
+                }
+                return oThis.nodeName!='BODY'?oThis:null;
+            }
+
+        function showRow(obj) {
+            var tr = getParentNode(obj, 'TR');
+            if(tr) {
+                return tr.rowIndex;
+            }
+        }
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie != '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) == (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+                return cookieValue;
+            }
+            var csrftoken = getCookie('csrftoken');
+            console.log(csrftoken);
+
+            //Ajax call
+            function csrfSafeMethod(method) {
+                return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+            }
+            $.ajaxSetup({
+                crossDomain: false, // obviates need for sameOrigin test
+                beforeSend: function(xhr, settings) {
+
+                    if (!csrfSafeMethod(settings.type)) {
+                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                    }
+                }
+            });
+
+            var el = $('#articles');
+            function nigger(id, pk){
+                $.ajax({
+                    type: 'GET',
+                    url: '/success/',
+                    dataType: 'json',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    success: function(data){
+                            console.log(data);
+                            resps = JSON5.parse(data.resps);
+                            var htmldata=""
+                            for (var x in resps){
+                                if (resps[x].pk == pk){
+                                    htmldata+="<div class='title-exact'>Местоположение: </div><div class='info-exact'> "+resps[x].fields.geo+"</div></p>" +
+                                    "<p><div class='title-exact'>Номер карты: </div><div class='info-exact'> "+resps[x].fields.card_id+"</div></p>" +
+                                    "<p><div class='title-exact'>Дата: </div><div class='info-exact'> "+resps[x].fields.date+"</div></p>" +
+                                    "<p><div class='title-exact'>Совпадение: </div><div class='info-exact'> "+resps[x].fields.matched+"</div></p>" +
+                                    "<p><div class='title-exact'>Отклонение: </div><div class='info-exact'> "+resps[x].fields.variance+"</div></p>" +
+                                    "<p><div class='title-exact'>Описание топлива: </div><div class='info-exact'> "+resps[x].fields.short_text+"</div></p>" +
+                                    "<p><div class='title-exact'>Модель ТС: </div><div class='info-exact'> "+resps[x].fields.ts_model+"</div></p>" +
+                                    "<p><div class='title-exact'>Серийный номер ТС: </div><div class='info-exact'> "+resps[x].fields.ts_id+"</div></p>" +
+                                    "<p><div class='title-exact'>Марка топлива: </div><div class='info-exact'> "+resps[x].fields.fuel_mark+"</div></p>" +
+                                    "<p><div class='title-exact'>Водитель: </div><div class='info-exact'> "+resps[x].fields.driver_name+"</div></p>" +
+                                    "<p><div class='title-exact'>Полное имя водителя: </div><div class='info-exact'> "+resps[x].fields.full_name+"</div></p>"+
+                                    "<p><div id='fake_var' style='display: none'>"+resps[x].fields.variance_reason+"</div></p>"+
+                                    "<p><div id='fake_act' style='display: none'>"+resps[x].fields.actions+"</div></p>"+
+                                    "<p><div id='fake_ps' style='display: none'>"+resps[x].fields.postscriptum+"</div></p>"
+                                }
+                            }
+                            $('#articles').html(htmldata);
+                    }
+                });
+
+                $.ajax({
+                    type: 'GET',
+                    url: '/success/',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest',
+                               'show-form': 'show-form'
+                    },
+                    success: function(response){
+                            console.log('форма');
+                            $('#editFormDiv').html(response + '<p><button type="submit" id="button_id" class="redact-button">Изменить</button></p>');
+                            var vr = document.getElementById("id_variance_reason");
+                            var ac = document.getElementById("id_actions");
+                            var ps = document.getElementById("id_postscriptum");
+
+                             for (i = 0; i < vr.options.length; i++) {
+                                if (vr.options[i].value == document.getElementById("fake_var").innerHTML) {
+                                    vr.selectedIndex = i;
+                                    break;
+                                }
+                             }
+
+                            for (i = 0; i < ac.options.length; i++) {
+                            console.log(ac.options[i].value);
+                            console.log(document.getElementById("fake_act").innerHTML);
+                                if (ac.options[i].value == document.getElementById("fake_act").innerHTML) {
+                                    console.log(ac.options[i].value + ' wow');
+                                    ac.selectedIndex = i;
+                                    break;
+                                }
+                             }
+                            ps.value = document.getElementById("fake_ps").innerHTML
+                    }
+                });
+
+                $('#editForm').submit(function() {
+                    $.ajax({
+                        type: $(this).attr('method'),
+                    data: {
+                            variance_reason: $('#id_variance_reason').val(),
+                            actions: $('#id_actions').val(),
+                            postscriptum: $('#id_postscriptum').val(),
+                            pk: pk,
+                            csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+                        },
+                        url: $(this).attr('action'),
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                        success: function(data) {
+                            console.log('from form submit func ' + pk);
+                            $('#editFormDiv').append('suc');
+                        }
+                    });
+                    return false;
+                });
+
+
+
+            }
+    </script>
+</head>
+<body>
+<header>
+    <img src="{% static 'media/image_2.png'%}" alt="" class="gaz">
+    <div class="res">Результат</div>
+</header>
+
+<form method="POST" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit">logout</button>
+</form>
+
+<div class="go-back">
+    <a href="{% url 'upload'%}" class="go-back-btn">Назад</a>
+    <img src="{% static 'media/arrow_back2.svg'%}" alt="" class="arrow_back" id="arrow_back">
+</div>
+<div class="filter"><br>
+    <div class="row">
+        <div class="col">
+            <div class="card card-body">
+                <form method="get">
+                    {{myFilter.form}}
+                    <button class = "filter-submit" type="submit">
+                        Применить
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+<br></div>
+
+<div class="result-table">
+    <table>
+        <tr class="headers">
+            <th>Номер карты</th>
+            <th>Местоположение</th>
+            <th>Дата заправки</th>
+            <th>Совпадение</th>
+        </tr>
+        {% for item in result_query %}
+        <tr class="items">
+            <td onclick="nigger(showRow(this), {{item.pk}} )" style="width:100px; text-align:center; ">{{ item.card_id }}</td>
+            <td style="width:200px;">{{ item.geo }}</td>
+            <td style="width:200px;">{{ item.date }}</td>
+            <td style="width:200px;">{{ item.matched }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+
+<div id="articles" class="exact-one">
+
+</div>
+    <form method="POST" novalidate class="editForm" id="editForm">
+        {% csrf_token %}
+        <div class="editFormDiv" id="editFormDiv">
+
+        </div>
+    </form>
+
+</body>
+</html>

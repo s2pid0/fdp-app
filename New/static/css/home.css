@@ -1,0 +1,161 @@
+*{
+    margin: 0;
+}
+
+@font-face{
+    font-family: 'HeliosCond';
+    scr: url(New/static/fonts/Helios Cond.ttf)
+}
+
+body {
+    background-color: rgba(255, 255, 255, 1);
+    width: 100%;
+    min-width:1000px;
+
+}
+
+header{
+    background-color:#1E78B5;
+}
+
+.gaz{
+    width: 100%;
+    max-width: 100%;
+    margin-left: 26px;
+    padding: 10px;
+    width: 110px;
+    filter: drop-shadow(0px 4px 1px rgba(0, 0, 0, 0.25));
+}
+
+.recycle{
+    width: 100%;
+    max-width: 1000px;
+    height: 100%;
+    position: absolute;
+    top: 25%;
+    left: 15%;
+    color: rgb(0, 0, 0);
+
+}
+
+.ff1{
+    margin-bottom: 20px;
+}
+
+.ff2{
+}
+
+.submit{
+    border-radius: 10px;
+    border-color: #1E78B5;
+    border: 1.5px solid;
+    background-color: white;
+    width: 200px;
+    height: 50px;
+    margin-top: 100px;
+    font-size: 25px;
+    color: #1EA3B5;
+    cursor: pointer;
+    font-family: HeliosCond;
+    font-weight: bold;
+    transition: all 0.5s ease;
+}
+
+.submit:hover{
+    background: rgba(30, 163, 181,1);
+	color: white;
+	transition: all 0.5s ease;
+}
+
+input[type="file"]{
+    color:transparent;
+}
+
+input[type="file"]::file-selector-button {
+    border: none;
+    background: rgba(30, 120, 189, 0.9);
+    padding: 8px 20px;
+    border-radius: 10px;
+    color: white;
+    font-family: HeliosCond;
+    font-weight: bold;
+    font-size:20px;
+    cursor: pointer;
+    transition: background .5s ease-in-out;
+
+}
+
+input[type="file"]::file-selector-button:hover {
+  background: #0d45a5;
+}
+
+.fl1{
+    display: inline-block;
+    font-family: HeliosCond;
+    font-weight: normal;
+    color: #3586BD;
+    position: absolute;
+    left: 20%;
+    margin-top: 1%;
+}
+.scroll-table{
+    position:absolute;
+    top: 25%;
+    left: 65%;
+    width: 399px;
+    border: 6px solid #1E78B5;
+    border-radius: 20px;
+    box-shadow: 0 4px 2px -2px gray;
+}
+
+.scroll-table-body {
+
+	height: 300px;
+	overflow-y: auto;
+	overflow-x: clip;
+
+	margin-top: 0px;
+
+}
+.scroll-table table {
+	width:400px;
+	table-layout: fixed;
+    border-collapse: collapse;
+
+}
+.scroll-table thead th {
+	font-weight: normal;
+	text-align: center;
+	font-family: HeliosCond;
+	color: white;
+	border-left: 1px solid #1E78B5;
+	padding: 10px 15px;
+	background: rgba(30, 120, 189, 0.4);
+	font-size: 14px;
+
+}
+
+.scroll-table tbody td {
+    font-family: HeliosCond;
+	text-align: left;
+	border: 1px solid #1E78B5;
+	padding: 10px 15px;
+	font-size: 14px;
+	vertical-align: top;
+}
+.scroll-table tbody tr:hover td{
+	background: rgba(30, 163, 181,0.4);
+    color: white;
+    transition: all 0.3s ease;
+}
+
+/* Стили для скролла */
+::-webkit-scrollbar {
+	width: 4px;
+}
+::-webkit-scrollbar-track {
+	box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+::-webkit-scrollbar-thumb {
+	box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}

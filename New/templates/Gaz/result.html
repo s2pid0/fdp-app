@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Карта {{ record_query.card_id }}</title>
+</head>
+<body>
+<a href="{{ request.META.HTTP_REFERER }}">Back</a>
+<table>
+    <tr>
+        <th>Местоположение</th>
+        <th>Номер карты</th>
+        <th>Дата заправки</th>
+        <th>Совпадение</th>
+        <th>Разница</th>
+    </tr>
+    <tr>
+        <td>{{ record_query.geo }}</td>
+        <td>{{ record_query.card_id }}</td>
+        <td>{{ record_query.date }}</td>
+        <td>{{ record_query.matched }}</td>
+        <td>{{ record_query.variance }}</td>
+    </tr>
+</table>
+
+</body>
+</html>

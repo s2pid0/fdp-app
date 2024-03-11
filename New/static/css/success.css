@@ -1,0 +1,257 @@
+*{
+    margin: 0;
+}
+
+@font-face{
+    font-family: 'HeliosCond';
+    scr: url(New/static/fonts/Helios Cond.ttf)
+}
+
+
+body {
+    background-color: rgba(255, 255, 255, 1);
+    width: 100%;
+    min-width:1000px;
+
+}
+
+
+
+header{
+    background-color:#1E78B5;
+}
+
+.gaz{
+    width: 100%;
+    max-width: 100%;
+    margin-left: 26px;
+    padding: 10px;
+    width: 110px;
+    filter: drop-shadow(0px 4px 1px rgba(0, 0, 0, 0.25));
+}
+
+.result-table table{
+    display: inline-block;
+    position: absolute;
+    top: 20%;
+    right: 0;
+    bottom: 15%;
+    left: 5%;
+    width: 40%;
+    border: 3px solid #1E78B5;
+    border-radius: 10px;
+    border-collapse: collapse;
+    overflow:auto;
+}
+
+.headers{
+    font-family: HeliosCond;
+    font-weight: normal;
+    height: 32px;
+    color: #1E78B5;
+    background-color: rgba(237, 237, 237, 0.7);
+}
+
+.res{
+    position: absolute;
+    left: 90%;
+    top: 5.5%;
+    color: white;
+    font-family: HeliosCond;
+    font-weight: bold;
+    font-size: 22px;
+}
+
+.result-table table th{
+    border: 1px solid rgba(92, 92, 92, 1);
+
+}
+
+.result-table table td{
+    border: 1px solid rgba(92, 92, 92, 0.5);
+
+}
+
+.items:hover{
+    background: rgba(30, 163, 181,1);
+	color: white;
+	transition: all 0.5s ease;
+}
+
+
+.exact-one{
+    position: absolute;
+    top: 30%;
+    left: 70%;
+}
+
+.title-exact{
+    display: inline-block;
+    font-family: HeliosCond;
+    font-weight: normal;
+    font-size:17px;
+}
+
+.info-exact{
+    display: inline;
+
+    font-weight: normal;
+    font-size:17px;
+
+}
+
+.filter{
+    position: absolute;
+    top: 18%;
+    left: 70%;
+    font-family: HeliosCond;
+    font-weight: normal;
+    font-size:15px;
+}
+
+.filter select{
+    border-radius: 5px;
+    background-color: white;
+    font-family: HeliosCond;
+    font-weight: normal;
+    font-size:12px;
+}
+
+
+.filter-submit{
+    position: absolute;
+    top: 95%;
+    width: 130px;
+    height: 30px;
+    font-family: HeliosCond;
+    font-weight: normal;
+    font-size:15px;
+    color: white;
+    border-radius: 10px;
+    border: none;
+    background-color: #1E78B5;
+    cursor: pointer;
+    transition: background .2s ease-in-out;
+}
+
+.filter-submit:hover{
+    color: #1E78B5;
+    border: 1px solid #1E78B5;
+    background-color: white;
+
+}
+
+.editFormDiv{
+    position:absolute;
+    left: 70%;
+    top: 65%;
+}
+
+.efc1{
+    border-radius: 5px;
+    position:relative;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+
+.efc2{
+    border-radius: 5px;
+    margin-bottom: 10px;
+
+}
+
+.efc3{
+    border-radius: 5px;
+    margin-bottom: 10px;
+    height: 50px;
+}
+
+.redact-button{
+    border-radius: 10px;
+    border-color: #1E78B5;
+    border: 1.5px solid;
+    background-color: white;
+    width: 130px;
+    height: 30px;
+    font-size: 15px;
+    color: rgba(30, 163, 181,1);
+    cursor: pointer;
+    font-family: HeliosCond;
+    font-weight: normal;
+    transition: all 0.5s ease;
+}
+
+.redact-button:hover{
+    background: rgba(30, 163, 181,1);
+	color: white;
+	transition: all 0.5s ease;
+}
+
+.go-back-btn{
+    position:absolute;
+    top: 90%;
+    left: 5%;
+    border: 3px solid #1E78B5;
+    background-color: #1E78B5;
+    border-radius: 10px;
+    width: 100px;
+    height: 38px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    font-family: HeliosCond;
+    z-index: 5;
+    transition: all 0.5s ease;
+}
+
+.go-back-btn:hover{
+
+    background-color: white;
+    border-radius: 20px;
+    color: #1E78B5
+}
+
+.arrow_back{
+    visibility:hidden;
+    position:absolute;
+    top: 89.65%;
+    left: 5%;
+    width: 100px;
+    height: 48px;
+    transform-origin: center center;
+    transform: rotate(30deg);
+    filter: invert(41%) sepia(62%) saturate(608%) hue-rotate(161deg) brightness(88%) contrast(99%);
+    z-index: 3;
+}
+
+.go-back:not(:hover) .arrow_back{
+    animation: arrow-animation-in 0.3s ease 1 normal forwards;
+}
+
+.go-back:hover .arrow_back{
+    animation: arrow-animation-out 0.3s ease 1 normal forwards;
+}
+
+@keyframes arrow-animation-out{
+  from { transform: translateX(0%); }
+  to { transform: translateX(-67.5%); }
+}
+
+@keyframes arrow-animation-in{
+  from { transform: translateX(-67.5%); }
+  to { transform: translateX(0%); }
+}
+
+
+/* Стили для скролла */
+::-webkit-scrollbar {
+	width: 4px;
+}
+::-webkit-scrollbar-track {
+	box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}
+::-webkit-scrollbar-thumb {
+	box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+}

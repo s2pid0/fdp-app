@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css?family=HeliosCond&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/auth.css'%}" type="text/css">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>auth</title>
+</head>
+<body>
+    <header>
+        <img src="{% static 'media/image_1.png'%}" alt="" class="gaz">
+    </header>
+
+    <span  class="welcome">Добро пожаловать!</span>
+
+    {% if messages %}
+		<div class="messages">
+		{% for message in messages %}
+			<div class="alert {% if message.tags %}alert-{{ message.tags }}"{% endif %}>
+				{{ message }}
+			</div>
+		{% endfor %}
+		</div>
+	{% endif %}
+
+    {%block content%}
+    {%endblock content%}
+    <form method="POST" novalidate class="form">
+        {% csrf_token %}
+        {{form}}
+
+        <input type="submit" value="Вход" class="submit">
+    </form>
+
+</body>
+</html>
