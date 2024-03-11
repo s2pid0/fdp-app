@@ -70,7 +70,7 @@
             });
 
             var el = $('#articles');
-            function nigger(id, pk){
+            function showcurr(id, pk){
                 $.ajax({
                     type: 'GET',
                     url: '/success/',
@@ -200,7 +200,7 @@
         </tr>
         {% for item in result_query %}
         <tr class="items">
-            <td onclick="nigger(showRow(this), {{item.pk}} )" style="width:100px; text-align:center; ">{{ item.card_id }}</td>
+            <td onclick="showcurr(showRow(this), {{item.pk}} )" style="width:100px; text-align:center; ">{{ item.card_id }}</td>
             <td style="width:200px;">{{ item.geo }}</td>
             <td style="width:200px;">{{ item.date }}</td>
             <td style="width:200px;">{{ item.matched }}</td>

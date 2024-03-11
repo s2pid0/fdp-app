@@ -23,14 +23,13 @@ from .filters import ResultFilter
 from django.conf import settings
 from django.contrib.auth import logout
 
-# Create your views here.
+
 
 def user_logout(request):
     logout(request)
     return HttpResponseRedirect('/auth/')
 
 def handle_uploaded_file(files):
-    # upload_dir = os.path.join(settings.BASE_DIR, 'uploads')
     for f in files:
         if not os.path.exists(settings.MEDIA_ROOT):
             os.makedirs(settings.MEDIA_ROOT)
@@ -41,7 +40,7 @@ def handle_uploaded_file(files):
 @login_required()
 def upload(request):
     query_reports = ResultTable.objects.all()
-    print(qпuery_reports)
+    print(query_reports)
 
     if request.method == 'DELETE':
         ResultTable.objects.get(pk=request.DELETE['delete-id']).delete()
@@ -83,11 +82,10 @@ def upload(request):
         form = UploadFileForm()
     return render(request, "gaz/home.html", {"form": form, "query_reports": query_reports})
 
+
 @login_required(login_url='auth/')
 @csrf_exempt
-def check_terminal(request, *args, **kwargs):
-    e_id = kwargs.get('e_id', None)
-
+def check_terminal(request):
     def ajax(request):
         if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
             return True
@@ -101,17 +99,6 @@ def check_terminal(request, *args, **kwargs):
 
     print(ajax(request))
 
-    # if request.method == "POST":
-    #     editResultForm = EditResultForm(request.POST)
-    #     if editResultForm.is_valid():
-    #         # files1 = form.cleaned_data['file_field1']
-    #         # files2 = form.cleaned_data['file_field2']
-    #         return HttpResponseRedirect("/success/")
-    #
-    # else:
-    #     editResultForm = EditResultForm()
-
-
     if request.method == 'GET' and ajax(request):
         data = {
             'resps': serialize("json", result_query)
@@ -123,18 +110,11 @@ def check_terminal(request, *args, **kwargs):
             return JsonResponse(data, safe=False)
 
     if request.method == 'POST':
-        print("я вынул пк из запроса: ", request.POST['pk'])
         editable_record = Result.objects.get(pk=request.POST['pk'])
-        print(editable_record)
         editable_record.variance_reason = request.POST['variance_reason']
         editable_record.actions = request.POST['actions']
         editable_record.postscriptum = request.POST['postscriptum']
         editable_record.save()
-        print(editable_record.variance_reason, ' ', editable_record.actions, ' ', editable_record.postscriptum)
-
-
-    # if request.method == 'POST' and ajax(request):
-    #     return JsonResponse({ "editForm": editResultForm})
 
 
     return render(request, "gaz/success.html", {"result_query": result_query, "myFilter": myFilter})
@@ -149,15 +129,7 @@ def result_delete(request, pk):
     return render(request, 'gaz/home.html', {'report': report})
 
 
-def todatabase(df, id):
-    user = settings.DATABASES['default']['USER']
-    password = settings.DATABASES['default']['PASSWORD']
-    database_name = settings.DATABASES['default']['NAME']
-    database_url = 'postgresql://{user}:{password}@localhost:5432/{database_name}'.format(user=user, password=password,
-                                                                                          database_name=database_name, )
-    engine = create_engine(database_url, echo=False)
 
-    df.to_sql(Result._meta.db_table + str(id), if_exists='replace', con=engine, index=True, index_label='id')
 
 @login_required(login_url='auth/')
 def get_results(request, pk):
@@ -467,7 +439,6 @@ def xls_processing():
                     gaz_result.loc[k, 'driver_name'] = gaz_new.loc[i, 'Имя пользователя']
                     gaz_result.loc[k, 'full_name'] = gaz_new.loc[i, 'Полное имя']
 
-                    # gaz_result.loc[k, 'created_at_id'] = str(datetime.date.today())
                     i += 1
                     j += 1
                     k += 1
@@ -484,7 +455,6 @@ def xls_processing():
                     gaz_result.loc[k, 'driver_name'] = gaz_new.loc[i, 'Имя пользователя']
                     gaz_result.loc[k, 'full_name'] = gaz_new.loc[i, 'Полное имя']
 
-                    # gaz_result.loc[k, 'created_at_id'] = str(datetime.date.today())
                     i += 1
                     j += 1
                     k += 1
@@ -501,7 +471,6 @@ def xls_processing():
                 gaz_result.loc[k, 'driver_name'] = gaz_new.loc[i, 'Имя пользователя']
                 gaz_result.loc[k, 'full_name'] = gaz_new.loc[i, 'Полное имя']
 
-                # gaz_result.loc[k, 'created_at_id'] = str(datetime.date.today())
                 i += 1
                 k += 1
             elif gaz_new.iloc[i]['Дата заправки'].normalize() > gaz_trans_new.iloc[j]['Дата транзакции'].normalize():
@@ -517,7 +486,6 @@ def xls_processing():
                 gaz_result.loc[k, 'driver_name'] = gaz_trans_new.loc[i, 'Водитель']
                 gaz_result.loc[k, 'full_name'] = gaz_trans_new.loc[i, 'Водитель']
 
-                # gaz_result.loc[k, 'created_at_id'] = str(datetime.date.today())
                 j += 1
                 k += 1
         elif float(gaz_new.iloc[i]['Номер карты']) % 100000000 < float(
@@ -534,7 +502,6 @@ def xls_processing():
             gaz_result.loc[k, 'driver_name'] = gaz_new.loc[i, 'Имя пользователя']
             gaz_result.loc[k, 'full_name'] = gaz_new.loc[i, 'Полное имя']
 
-            # gaz_result.loc[k, 'created_at_id'] = str(datetime.date.today())
             i += 1
             k += 1
         else:
@@ -550,14 +517,11 @@ def xls_processing():
             gaz_result.loc[k, 'driver_name'] = gaz_trans_new.loc[i, 'Водитель']
             gaz_result.loc[k, 'full_name'] = gaz_trans_new.loc[i, 'Водитель']
 
-            # gaz_result.loc[k, 'created_at_id'] = str(datetime.date.today())
             j += 1
             k += 1
 
-    # to_django(gaz_result, Result, if_exists="fail")
+
     gaz_result.to_excel('upload\РЕЗУЛЬТАТ.xlsx')
 
-    # Перевод результата в бд
-    # todatabase(gaz_result)
 
     return gaz_result
