@@ -16,7 +16,6 @@ from .forms import EditResultForm
 from django.http import HttpResponse, HttpResponseRedirect
 import numpy as np
 import pandas as pd
-from sqlalchemy import create_engine
 from .models import Result
 from .models import ResultTable
 from .filters import ResultFilter
@@ -364,7 +363,6 @@ def xls_processing():
     # СУММИРОВАНИЕ ТРАНЗАКЦИИ
     row = 0
     while row < len(gaz_trans.axes[0]) - 1:
-        #   print(row, '. номер: ',gaz_trans.iloc[row]['Номер карты'],' дата: ', gaz_trans.iloc[row]['Дата транзакции'].normalize())
         if gaz_trans.iloc[row]['Номер карты'] == gaz_trans.iloc[row + 1]['Номер карты'] and gaz_trans.iloc[row]['Дата транзакции'].normalize() == gaz_trans.iloc[row + 1]['Дата транзакции'].normalize():
             j = row
             sum = gaz_trans.iloc[row]['Количество']
@@ -416,7 +414,6 @@ def xls_processing():
     print(len(gaz_trans_new.axes[0]))
 
     while j < (len(gaz_trans_new.axes[0]) - 1) or i < (len(gaz_new.axes[0]) - 1):
-        # if (i > len(gaz_new.axes[0])):
         if float(gaz_trans_new.iloc[j]['Номер карты']) % 100000000 == float(gaz_new.iloc[i]['Номер карты']) % 100000000:
             if gaz_trans_new.iloc[j]['Дата транзакции'].normalize() == gaz_new.iloc[i]['Дата заправки'].normalize():
                 if gaz_trans_new.iloc[j]['Количество'] != gaz_new.iloc[i]['Объём топлива']:
@@ -505,7 +502,6 @@ def xls_processing():
             gaz_result.at[k, 'matched'] = 'запись отсутсвует в ЗВ'
 
             gaz_result.loc[k, 'short_text'] = gaz_trans_new.loc[j, 'Товар']
-            # print(gaz_trans_new.iloc[i]['Товар'])
             gaz_result.loc[k, 'ts_model'] = gaz_trans_new.loc[j, 'ТС']
             gaz_result.loc[k, 'ts_id'] = gaz_trans_new.loc[j, 'ТС']
             gaz_result.loc[k, 'fuel_mark'] = gaz_trans_new.loc[j, 'Товар']
