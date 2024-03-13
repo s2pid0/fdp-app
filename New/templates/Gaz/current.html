@@ -88,9 +88,9 @@
                                     "<p><div class='title-exact'>Марка топлива: </div><div class='info-exact'> "+resps[x].fields.fuel_mark+"</div></p>" +
                                     "<p><div class='title-exact'>Водитель: </div><div class='info-exact'> "+resps[x].fields.driver_name+"</div></p>" +
                                     "<p><div class='title-exact'>Полное имя водителя: </div><div class='info-exact'> "+resps[x].fields.full_name+"</div></p>"+
-                                    "<p><div id='fake_var' style='display: none'>"+resps[x].fields.variance_reason+"</div></p>"+
-                                    "<p><div id='fake_act' style='display: none'>"+resps[x].fields.actions+"</div></p>"+
-                                    "<p><div id='fake_ps' style='display: none'>"+resps[x].fields.postscriptum+"</div></p>"
+                                    "<p><div class='efc1-label'>Причины отклонения: </div><div id='fake_var' style='display: none'>"+resps[x].fields.variance_reason+"</div></p>"+
+                                    "<p><div class='efc2-label'>Действия: </div><div id='fake_act' style='display: none'>"+resps[x].fields.actions+"</div></p>"+
+                                    "<p><div class='efc3-label'>Примечания: </div><div id='fake_ps' style='display: none'>"+resps[x].fields.postscriptum+"</div></p>"
                                 }
                             }
                             $('#articles').html(htmldata);
