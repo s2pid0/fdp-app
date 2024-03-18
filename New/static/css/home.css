@@ -18,6 +18,39 @@ header{
     background-color:#1E78B5;
 }
 
+.preloader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ffffff;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 5px solid #cccccc;
+  border-top-color: #1E78B5;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+
+
 .gaz{
     width: 100%;
     max-width: 100%;
@@ -109,7 +142,6 @@ input[type="file"]::file-selector-button:hover {
 }
 
 .scroll-table-body {
-
 	height: 300px;
 	overflow-y: auto;
 	overflow-x: clip;
@@ -147,6 +179,50 @@ input[type="file"]::file-selector-button:hover {
 	background: rgba(30, 163, 181,0.4);
     color: white;
     transition: all 0.3s ease;
+}
+
+.logout{
+    position:absolute;
+    cursor: pointer;
+    top: 90%;
+    left: 15%;
+    border: 1px solid #DC143C;
+    border-radius: 10px;
+    background-color: white;
+    height: 40px;
+    width: 100px;
+    font-family: HeliosCond;
+    font-size: 15px;
+    color: #B22222;
+    transition: all 0.5s ease;
+
+}
+
+
+.logout:hover{
+    background: #DC143C;
+	color: white;
+	transition: all 0.5s ease;
+}
+
+.exit{
+    position: absolute;
+    top: 29%;
+    right: 73%;
+    width: 17px;
+    height: 17px;
+    filter: invert(15%) sepia(80%) saturate(5554%) hue-rotate(341deg) brightness(89%) contrast(93%);
+}
+
+.logout div{
+    position: absolute;
+    top: 30%;
+    left: 35%;
+}
+
+.logout:hover .exit{
+    filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(132deg) brightness(101%) contrast(102%);
+    transition: all 0.1s ease;
 }
 
 /* Стили для скролла */

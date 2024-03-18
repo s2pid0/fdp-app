@@ -8,38 +8,53 @@
     <link rel="stylesheet" href="{% static 'css/home.css'%}" type="text/css">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Создать/посмотреть отчет</title>
+    <script>
+
+        function preloader(){
+            if (document.getElementById('id_file_field1').value || document.getElementById('id_file_field2').value){
+                var preloader = document.getElementById('preloader');
+                preloader.style.display = 'flex';
+            }
+        };
+
+        window.pressed_ff1 = function(){
+            var a = document.getElementById('id_file_field1');
+            if(a.value == "")
+            {
+                fileLabel.innerHTML = "Choose file";
+            }
+            else
+            {
+                var theSplit = a.value.split('\\');
+                fileLabel1.innerHTML = theSplit[theSplit.length-1];
+            }
+        };
+
+        window.pressed_ff2 = function(){
+            var a = document.getElementById('id_file_field2');
+            if(a.value == "")
+            {
+                fileLabel.innerHTML = "Choose file";
+            }
+            else
+            {
+                var theSplit = a.value.split('\\');
+                fileLabel2.innerHTML = theSplit[theSplit.length-1];
+            }
+        };
+
+    </script>
 </head>
+
 <body>
+
+<div id="preloader" class="preloader">
+    <div class="spinner"></div>
+</div>
+
 <header>
     <img src="{% static 'media/image_2.png'%}" alt="" class="gaz">
 </header>
-<script>
-    window.pressed_ff1 = function(){
-    var a = document.getElementById('id_file_field1');
-    if(a.value == "")
-    {
-        fileLabel.innerHTML = "Choose file";
-    }
-    else
-    {
-        var theSplit = a.value.split('\\');
-        fileLabel1.innerHTML = theSplit[theSplit.length-1];
-    }
-};
-
-    window.pressed_ff2 = function(){
-    var a = document.getElementById('id_file_field2');
-    if(a.value == "")
-    {
-        fileLabel.innerHTML = "Choose file";
-    }
-    else
-    {
-        var theSplit = a.value.split('\\');
-        fileLabel2.innerHTML = theSplit[theSplit.length-1];
-    }
-};
-</script>
 
 <form method="POST" enctype="multipart/form-data" class="recycle">
     {% csrf_token %}
@@ -47,7 +62,7 @@
     <p>{{form.file_field1}}<label id="fileLabel1" class="fl1">Файл заправочной ведомости</label></p>
 
     <p>{{form.file_field2}}<label id="fileLabel2" class="fl1">Файл транзакционного отчета</label></p>
-    <button type="submit" id="button_id" class="submit">Обработать</button>
+    <button type="submit" id="button_id" class="submit" onclick="preloader()">Обработать</button>
 </form>
 
 
@@ -80,5 +95,14 @@
         </table>
     </div>
 </div>
+
+<form method="POST" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="logout">
+        <img src="{% static 'media/exit.svg'%}" aria-hidden="true" class="exit">
+        <div>Выйти</div>
+    </button>
+</form>
+
 </body>
 </html>

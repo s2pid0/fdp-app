@@ -1,4 +1,5 @@
 import os
+import time
 import datetime
 import json
 import simplejson
@@ -39,7 +40,7 @@ def handle_uploaded_file(files):
 @login_required()
 def upload(request):
     query_reports = ResultTable.objects.all()
-    print(query_reports)
+    # print(query_reports)
 
     if request.method == 'DELETE':
         ResultTable.objects.get(pk=request.DELETE['delete-id']).delete()
@@ -50,10 +51,10 @@ def upload(request):
             files1 = form.cleaned_data['file_field1']
             files2 = form.cleaned_data['file_field2']
             handle_uploaded_file([files1, files2])
-            res = xls_processing()
-            report = ResultTable(created_by=request.user.username)
+            res, all_rows, matched_count, unmatched_count, other_count = xls_processing()
+            report = ResultTable(created_by=request.user.username, all_rows=all_rows, matched_count=matched_count, unmathed_count=unmatched_count, other_count=other_count)
             report.save()
-            print(report.id)
+
             res['created_at_id'] = report.id
             df_records = res.to_dict('records')
             model_instances = [Result(
@@ -92,6 +93,7 @@ def check_terminal(request):
             return False
 
     pk = ResultTable.objects.latest('id')
+    stats = ResultTable.objects.latest('id')
     result_query = Result.objects.filter(created_at=pk)
     myFilter = ResultFilter(request.GET, result_query)
     result_query = myFilter.qs
@@ -115,8 +117,7 @@ def check_terminal(request):
         editable_record.postscriptum = request.POST['postscriptum']
         editable_record.save()
 
-
-    return render(request, "gaz/success.html", {"result_query": result_query, "myFilter": myFilter})
+    return render(request, "gaz/success.html", {"result_query": result_query, "myFilter": myFilter, "stats": stats})
 
 
 def result_delete(request, pk):
@@ -132,7 +133,8 @@ def result_delete(request, pk):
 
 @login_required(login_url='auth/')
 def get_results(request, pk):
-    id_created = pk;
+    stats = ResultTable.objects.latest('id')
+    id_created = pk
     result_query = Result.objects.all().filter(created_at=pk)
     def ajax(request):
         if request.META.get('HTTP_X_REQUESTED_WITH') == 'XMLHttpRequest':
@@ -154,17 +156,17 @@ def get_results(request, pk):
             return JsonResponse(data, safe=False)
 
     if request.method == 'POST':
-        print("я вынул пк из запроса: ", request.POST['pk'])
+        # print("я вынул пк из запроса: ", request.POST['pk'])
         editable_record = Result.objects.get(pk=request.POST['pk'])
-        print(editable_record)
+        # print(editable_record)
         editable_record.variance_reason = request.POST['variance_reason']
         editable_record.actions = request.POST['actions']
         editable_record.postscriptum = request.POST['postscriptum']
         editable_record.save()
-        print(editable_record.variance_reason, ' ', editable_record.actions, ' ', editable_record.postscriptum)
+        # print(editable_record.variance_reason, ' ', editable_record.actions, ' ', editable_record.postscriptum)
 
 
-    return render(request, "gaz/current.html", {"result_query": result_query, "myFilter": myFilter, "created_at": id_created})
+    return render(request, "gaz/current.html", {"result_query": result_query, "myFilter": myFilter, "created_at": id_created, "stats": stats})
 
 
 
@@ -177,13 +179,14 @@ def xls_processing():
     pd.set_option('mode.chained_assignment', None)
     gazmotor_path = ''
     gazmotor_comp_path = ''
+    start_time = time.time()
     for root, dirs, files in os.walk(settings.MEDIA_ROOT):
         for file in os.listdir(root):
             if file.lower().endswith('.xlsx') and file.startswith('ЗВ'):
                 gazmotor_path = os.path.join(root, file)
             elif file.lower().endswith('.xlsx') and file.startswith('Транзакции'):
                 gazmotor_comp_path = os.path.join(root, file)
-
+    print("ЧТЕНИЕ --- %s seconds ---" % (time.time() - start_time))
     gaz_orig = pd.read_excel(gazmotor_path)
 
     gaz_orig = pd.DataFrame(data=gaz_orig)
@@ -291,52 +294,85 @@ def xls_processing():
 
     }
     # для транз
-    fuel_trs = {"Аи-92",
-                "ДТ ОПТИ",
-                "Аи-95",
-                "G-95",
-                "ДТ",
-                "Аи-92 Премиум",
-                "АИ-92 ОПТИ",
-                "ДТ Премиум"
+    fuel_trs = {"Аи-92": "Аи-92",
+                "ДТ ОПТИ": "ДТ",
+                "Аи-95": "Аи-95",
+                "G-95": "Аи-95",
+                "ДТ": "ДТ",
+                "Аи-92 Премиум": "Аи-92",
+                "АИ-92 ОПТИ": "Аи-92",
+                "ДТ Премиум": "ДТ"
                 }
 
-    # ОТСЕИВАНИЕ ЛИШНИХ ПО ТОПЛИВУ И ГЕО
-    for row in range(gaz_orig.shape[0]):
-        if gaz_orig.iloc[row]['Номер карты'] != np.nan and (gaz_orig.iloc[row]['Номер карты']) < 8000000:
-            gaz_orig.loc[row, 'Номер карты'] = 10000000 + gaz_orig.iloc[row]['Номер карты']
-        if gaz_orig.iloc[row]['Марка топлива'] not in kind_fuel or gaz_orig.iloc[row]['Местоположение'] not in name_AK:
-            gaz_orig.loc[row] = np.nan
-        if gaz_orig.iloc[row]['Удалена'] == 'Помечен для удаления':
-            gaz_orig.loc[row] = np.nan
+    fuel_trs_test = {"101592ГН": "Аи-92",
+                "1015ДТГН": "ДТ",
+                "101595ГН": "Аи-95",
+                }
+    start_time = time.time()
 
-    gaz_orig.dropna(axis='index', subset='Марка топлива', inplace=True, ignore_index=True)
-    gaz_orig.dropna(axis='index', subset='Номер карты', inplace=True, ignore_index=True)
-    gaz_orig.sort_values(by=['Номер карты', 'Дата заправки'], ignore_index=True, inplace=True)
+    #ОБРАБОТКА ЗВ
+    def set_id(x):
+        if x is not np.nan and x < 8000000:
+            x = 10000000 + x
+        return x
+
+    def set_nan_by_fuel(x, fuel):
+        if x not in fuel:
+            x = np.nan
+        return x
+
+    def set_nan_by_ak(x, ak):
+        if x not in ak:
+            x = np.nan
+        return x
+
+    def set_nan_by_flag(x):
+        if x == 'Помечен для удаления':
+            x = np.nan
+        return x
+
+    def format_fuel(x, fuel):
+        if x is not np.nan:
+            x = fuel[x]
+        return x
+
+    start_time = time.time()
+    gaz_orig['Номер карты'] = gaz_orig['Номер карты'].apply(set_id)
+    gaz_orig['Марка топлива'] = gaz_orig['Марка топлива'].apply(set_nan_by_fuel, args=(kind_fuel, ))
+    gaz_orig['Местоположение'] = gaz_orig['Местоположение'].apply(set_nan_by_ak, args=(name_AK, ))
+    gaz_orig['Марка топлива'] = gaz_orig['Марка топлива'].apply(format_fuel, args=(fuel_trs_test, ))
+    gaz_orig['Удалена'] = gaz_orig['Удалена'].apply(set_nan_by_flag)
+
+    zv_format = time.time() - start_time
+    gaz_orig.dropna(axis='index', subset=['Марка топлива', 'Номер карты', 'Удалена'], inplace=True, ignore_index=True)
+    gaz_orig.sort_values(by=['Номер карты', 'Дата заправки', 'Марка топлива'], ignore_index=True, inplace=True)
     gaz_orig.loc[len(gaz_orig.index)] = pd.Series()
+
     # СУММИРОВАНИЕ ЗВ
     i = 0
+    start_time = time.time()
     while i < len(gaz_orig.axes[0]) - 1:
         if gaz_orig.iloc[i]['Номер карты'] != np.nan:
-            if gaz_orig.iloc[i]['Номер карты'] == gaz_orig.iloc[i + 1]['Номер карты'] and gaz_orig.iloc[i]['Дата заправки'] == gaz_orig.iloc[i + 1]['Дата заправки']:
+            if gaz_orig.iloc[i]['Номер карты'] == gaz_orig.iloc[i + 1]['Номер карты'] and gaz_orig.iloc[i]['Дата заправки'] == gaz_orig.iloc[i + 1]['Дата заправки'] and gaz_orig.iloc[i]['Марка топлива'] == gaz_orig.iloc[i + 1]['Марка топлива']:
                 j = i
                 sum = gaz_orig.iloc[i]['Объём топлива']
-                while gaz_orig.iloc[i]['Номер карты'] == gaz_orig.iloc[j + 1]['Номер карты'] and gaz_orig.iloc[i]['Дата заправки'] == gaz_orig.iloc[j + 1]['Дата заправки']:
+                while gaz_orig.iloc[i]['Номер карты'] == gaz_orig.iloc[j + 1]['Номер карты'] and gaz_orig.iloc[i]['Дата заправки'] == gaz_orig.iloc[j + 1]['Дата заправки'] and gaz_orig.iloc[i]['Марка топлива'] == gaz_orig.iloc[j + 1]['Марка топлива']:
                     sum += gaz_orig.iloc[j + 1]['Объём топлива']
                     gaz_orig.loc[j + 1] = np.nan
                     j += 1
                 gaz_new.loc[i, 'Объём топлива'] = sum
-                gaz_new.loc[i, gaz_new.columns != 'Объём топлива'] = gaz_orig.loc[
-                    i, gaz_orig.columns != 'Объём топлива']
+                gaz_new.loc[i, gaz_new.columns != 'Объём топлива'] = gaz_orig.loc[i, gaz_orig.columns != 'Объём топлива']
                 i += 2
             else:
                 gaz_new.loc[i, gaz_new.columns] = gaz_orig.loc[i, gaz_orig.columns]
                 i += 1
         else:
             i += 1
-
     gaz_new.dropna(axis='index', subset='Объём топлива', inplace=True, ignore_index=True)
 
+    zv_summ = time.time() - start_time
+    #ОБРАБОТКА ТРАНЗАКЦИЙ
+    start_time = time.time()
     gaz_trans = pd.read_excel(gazmotor_comp_path)
     k = 0
     n = 0
@@ -350,41 +386,39 @@ def xls_processing():
 
     gaz_trans = pd.read_excel(gazmotor_comp_path, 'Sheet1', skiprows=k + 1, nrows=n - k - 1)
 
-    for row in range(gaz_trans.shape[0]):
-        if gaz_trans.iloc[row]['Товар'] not in fuel_trs or gaz_trans.iloc[row]['Группа карт'] not in name_AK_Gazpromneft:
-            gaz_trans.loc[row] = np.nan
-    gaz_trans.sort_values(by=['Номер карты', 'Дата транзакции'], ignore_index=True, inplace=True)
+    gaz_trans['Товар'] = gaz_trans['Товар'].apply(set_nan_by_fuel, args=(fuel_trs, ))
+    gaz_trans['Группа карт'] = gaz_trans['Группа карт'].apply(set_nan_by_ak, args=(name_AK_Gazpromneft,))
+    gaz_trans['Дата транзакции'] = gaz_trans['Дата транзакции'].apply(lambda x: x.normalize())
+    gaz_trans['Номер карты'] = gaz_trans['Номер карты'].apply(lambda x: x % 100000000)
+    gaz_trans['Товар'] = gaz_trans['Товар'].apply(format_fuel, args=(fuel_trs, ))
 
     gaz_trans.dropna(axis='index', how='any', subset='Товар', inplace=True, ignore_index=True)
-
+    gaz_trans.sort_values(by=['Номер карты', 'Дата транзакции', 'Товар'], ignore_index=True, inplace=True)
     gaz_trans_new = pd.DataFrame(columns=gaz_trans.columns)
-
     gaz_trans.loc[len(gaz_trans.index)] = pd.Series()
+    tranz_format = time.time() - start_time
     # СУММИРОВАНИЕ ТРАНЗАКЦИИ
     row = 0
+
+    start_time = time.time()
     while row < len(gaz_trans.axes[0]) - 1:
-        if gaz_trans.iloc[row]['Номер карты'] == gaz_trans.iloc[row + 1]['Номер карты'] and gaz_trans.iloc[row]['Дата транзакции'].normalize() == gaz_trans.iloc[row + 1]['Дата транзакции'].normalize():
+        if gaz_trans.iloc[row]['Номер карты'] == gaz_trans.iloc[row + 1]['Номер карты'] and gaz_trans.iloc[row]['Дата транзакции'].normalize() == gaz_trans.iloc[row + 1]['Дата транзакции'].normalize() and gaz_trans.iloc[row]['Товар'] == gaz_trans.iloc[row + 1]['Товар']:
             j = row
             sum = gaz_trans.iloc[row]['Количество']
-            while gaz_trans.iloc[row]['Номер карты'] == gaz_trans.iloc[j + 1]['Номер карты'] and gaz_trans.iloc[row]['Дата транзакции'].normalize() == gaz_trans.iloc[j + 1]['Дата транзакции'].normalize():
+            while gaz_trans.iloc[row]['Номер карты'] == gaz_trans.iloc[j + 1]['Номер карты'] and gaz_trans.iloc[row]['Дата транзакции'].normalize() == gaz_trans.iloc[j + 1]['Дата транзакции'].normalize() and gaz_trans.iloc[row]['Товар'] == gaz_trans.iloc[j + 1]['Товар']:
                 sum += gaz_trans.iloc[j + 1]['Количество']
                 gaz_trans.loc[j + 1] = np.nan
                 j += 1
 
-            curr_row = len(gaz_trans_new.index)
-            gaz_trans_new.loc[curr_row, 'Количество'] = sum
-            gaz_trans_new.loc[curr_row, gaz_trans_new.columns != 'Количество'] = gaz_trans.loc[row, gaz_trans.columns != 'Количество']
+            gaz_trans_new.loc[row, 'Количество'] = sum
+            gaz_trans_new.loc[row, gaz_trans_new.columns != 'Количество'] = gaz_trans.loc[row, gaz_trans.columns != 'Количество']
             row += 2
         else:
-            gaz_trans_new.loc[len(gaz_trans_new.index)] = gaz_trans.iloc[row]
+            gaz_trans_new.loc[row, gaz_trans_new.columns] = gaz_trans.loc[row, gaz_trans.columns]
             row += 1
 
     gaz_trans_new.dropna(axis='index', how='any', subset='Количество', inplace=True, ignore_index=True)
-    gaz_trans_new.sort_values(by=['Номер карты', 'Дата транзакции'], ignore_index=True, inplace=True)
-    gaz_new.sort_values(by=['Номер карты', 'Дата заправки'], ignore_index=True, inplace=True)
-
-    for j in range(gaz_trans_new.shape[0]):
-        gaz_trans_new.loc[j, 'Номер карты'] = gaz_trans_new.loc[j, 'Номер карты'] % 100000000
+    tranz_summ = time.time() - start_time
 
     gaz_result = {'geo': [],
                   'card_id': [],
@@ -411,12 +445,11 @@ def xls_processing():
     i = 0
     k = 0
     j = 0
-    print(len(gaz_trans_new.axes[0]))
-
+    start_time = time.time()
     while j < (len(gaz_trans_new.axes[0]) - 1) or i < (len(gaz_new.axes[0]) - 1):
         if float(gaz_trans_new.iloc[j]['Номер карты']) % 100000000 == float(gaz_new.iloc[i]['Номер карты']) % 100000000:
             if gaz_trans_new.iloc[j]['Дата транзакции'].normalize() == gaz_new.iloc[i]['Дата заправки'].normalize():
-                if gaz_trans_new.iloc[j]['Количество'] != gaz_new.iloc[i]['Объём топлива']:
+                if gaz_trans_new.iloc[j]['Количество'] != gaz_new.iloc[i]['Объём топлива'] or gaz_trans_new.iloc[j]['Товар'] != gaz_new.iloc[i]['Марка топлива']:
 
                     gaz_result.at[k, 'matched'] = 'Расходится'
                     gaz_result.loc[k, 'variance'] = float(gaz_trans_new.iloc[j]['Количество']) - float(gaz_new.iloc[i]['Объём топлива'])
@@ -513,7 +546,20 @@ def xls_processing():
 
     os.remove(gazmotor_comp_path)
     os.remove(gazmotor_path)
+    comp = time.time() - start_time
+    all_rows = len(gaz_result.axes[0])
+    matched_count = len(gaz_result[gaz_result['matched'] == 'совпадает'].axes[0])
+    unmathed_count = len(gaz_result[gaz_result['matched'] == 'Расходится'].axes[0])
+    other_count = len(gaz_result[(gaz_result['matched'] == 'запись отсутсвует в ЗВ') | (gaz_result['matched'] == 'запись отсутсвует в транзакциях')].axes[0])
+
+
+    print('ОБРАБОТКА ЗВ %s seconds' % zv_format)
+    print('СУММИРОВАНИЕ ЗВ %s seconds' % zv_summ)
+    print('ОБРАБОТКА ТРАНЗАКЦИЙ %s seconds' % tranz_format)
+    print('СУММИРОВАНИЕ ТРАНЗАКЦИЙ %s seconds' % tranz_summ)
+    print('СРАВНЕНИЕ %s seconds' % comp)
+    print('ИТОГО  %s seconds' % (zv_format + zv_summ + tranz_format + tranz_summ + comp))
     gaz_result.to_excel('upload\РЕЗУЛЬТАТ.xlsx')
 
 
-    return gaz_result
+    return gaz_result, all_rows, matched_count, unmathed_count, other_count

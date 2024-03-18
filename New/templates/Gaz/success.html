@@ -161,15 +161,15 @@
     </script>
 </head>
 <body>
+
+
+
 <header>
     <img src="{% static 'media/image_2.png'%}" alt="" class="gaz">
     <div class="res">Результат</div>
 </header>
 
-<form method="POST" action="{% url 'logout' %}">
-    {% csrf_token %}
-    <button type="submit">logout</button>
-</form>
+
 
 <div class="go-back">
     <a href="{% url 'upload'%}" class="go-back-btn">Назад</a>
@@ -207,6 +207,13 @@
         </tr>
         {% endfor %}
     </table>
+</div>
+
+<div class="stats">
+    <p>Всего записей: {{stats.all_rows}}</p>
+    <p>Совпало: {{stats.matched_count}}</p>
+    <p>Раходится: {{stats.unmathed_count}}</p>
+    <p>Отсуствует в одной из ведомостей: {{stats.other_count}}</p>
 </div>
 
 <div id="articles" class="exact-one">

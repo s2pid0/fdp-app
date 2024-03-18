@@ -24,7 +24,7 @@ from django.conf import settings
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    path('', user_views.register, name="auth"),
+    path('auth/', user_views.register, name="auth"),
     path('noperm/', user_views.noperm, name="noperm"),
     path('current/<int:pk>/', views.get_results, name='get_result'),
     path('record/<int:pk>/', views.get_record, name='get_record'),

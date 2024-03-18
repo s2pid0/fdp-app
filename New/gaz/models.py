@@ -21,6 +21,11 @@ class ResultTable(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.CharField(max_length=100, default=None)
 
+    all_rows = models.IntegerField(null=True, default=0)
+    matched_count = models.IntegerField(null=True, default=0)
+    unmathed_count = models.IntegerField(null=True, default=0)
+    other_count = models.IntegerField(null=True, default=0)
+
 
 
     class Meta:
