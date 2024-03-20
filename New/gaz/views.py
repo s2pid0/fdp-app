@@ -4,14 +4,13 @@ import datetime
 import json
 import simplejson
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponseBadRequest
-from django.core import serializers
+from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.shortcuts import redirect
 from django.core.serializers import serialize
 from django.views.decorators.csrf import csrf_exempt
 
-from . import models
+
 from .forms import UploadFileForm
 from .forms import EditResultForm
 from django.http import HttpResponse, HttpResponseRedirect
@@ -176,6 +175,7 @@ def get_record(request, pk):
 
 
 def xls_processing():
+    all_time=time.time()
     pd.set_option('mode.chained_assignment', None)
     gazmotor_path = ''
     gazmotor_comp_path = ''
@@ -351,23 +351,9 @@ def xls_processing():
     # СУММИРОВАНИЕ ЗВ
     i = 0
     start_time = time.time()
-    while i < len(gaz_orig.axes[0]) - 1:
-        if gaz_orig.iloc[i]['Номер карты'] != np.nan:
-            if gaz_orig.iloc[i]['Номер карты'] == gaz_orig.iloc[i + 1]['Номер карты'] and gaz_orig.iloc[i]['Дата заправки'] == gaz_orig.iloc[i + 1]['Дата заправки'] and gaz_orig.iloc[i]['Марка топлива'] == gaz_orig.iloc[i + 1]['Марка топлива']:
-                j = i
-                sum = gaz_orig.iloc[i]['Объём топлива']
-                while gaz_orig.iloc[i]['Номер карты'] == gaz_orig.iloc[j + 1]['Номер карты'] and gaz_orig.iloc[i]['Дата заправки'] == gaz_orig.iloc[j + 1]['Дата заправки'] and gaz_orig.iloc[i]['Марка топлива'] == gaz_orig.iloc[j + 1]['Марка топлива']:
-                    sum += gaz_orig.iloc[j + 1]['Объём топлива']
-                    gaz_orig.loc[j + 1] = np.nan
-                    j += 1
-                gaz_new.loc[i, 'Объём топлива'] = sum
-                gaz_new.loc[i, gaz_new.columns != 'Объём топлива'] = gaz_orig.loc[i, gaz_orig.columns != 'Объём топлива']
-                i += 2
-            else:
-                gaz_new.loc[i, gaz_new.columns] = gaz_orig.loc[i, gaz_orig.columns]
-                i += 1
-        else:
-            i += 1
+    gaz_new = gaz_orig
+    gaz_new['Объём топлива'] = gaz_new.groupby(by=['Номер карты', 'Дата заправки', 'Марка топлива'])['Объём топлива'].transform(lambda x: x.sum())
+    gaz_new.drop_duplicates(subset=['Номер карты', 'Дата заправки', 'Марка топлива', 'Объём топлива'], inplace=True)
     gaz_new.dropna(axis='index', subset='Объём топлива', inplace=True, ignore_index=True)
 
     zv_summ = time.time() - start_time
@@ -394,30 +380,15 @@ def xls_processing():
 
     gaz_trans.dropna(axis='index', how='any', subset='Товар', inplace=True, ignore_index=True)
     gaz_trans.sort_values(by=['Номер карты', 'Дата транзакции', 'Товар'], ignore_index=True, inplace=True)
-    gaz_trans_new = pd.DataFrame(columns=gaz_trans.columns)
-    gaz_trans.loc[len(gaz_trans.index)] = pd.Series()
     tranz_format = time.time() - start_time
     # СУММИРОВАНИЕ ТРАНЗАКЦИИ
-    row = 0
-
     start_time = time.time()
-    while row < len(gaz_trans.axes[0]) - 1:
-        if gaz_trans.iloc[row]['Номер карты'] == gaz_trans.iloc[row + 1]['Номер карты'] and gaz_trans.iloc[row]['Дата транзакции'].normalize() == gaz_trans.iloc[row + 1]['Дата транзакции'].normalize() and gaz_trans.iloc[row]['Товар'] == gaz_trans.iloc[row + 1]['Товар']:
-            j = row
-            sum = gaz_trans.iloc[row]['Количество']
-            while gaz_trans.iloc[row]['Номер карты'] == gaz_trans.iloc[j + 1]['Номер карты'] and gaz_trans.iloc[row]['Дата транзакции'].normalize() == gaz_trans.iloc[j + 1]['Дата транзакции'].normalize() and gaz_trans.iloc[row]['Товар'] == gaz_trans.iloc[j + 1]['Товар']:
-                sum += gaz_trans.iloc[j + 1]['Количество']
-                gaz_trans.loc[j + 1] = np.nan
-                j += 1
 
-            gaz_trans_new.loc[row, 'Количество'] = sum
-            gaz_trans_new.loc[row, gaz_trans_new.columns != 'Количество'] = gaz_trans.loc[row, gaz_trans.columns != 'Количество']
-            row += 2
-        else:
-            gaz_trans_new.loc[row, gaz_trans_new.columns] = gaz_trans.loc[row, gaz_trans.columns]
-            row += 1
-
+    gaz_trans_new = gaz_trans
+    gaz_trans_new['Количество'] = gaz_trans_new.groupby(by=['Номер карты', 'Дата транзакции', 'Товар'])['Количество'].transform(lambda x: x.sum())
+    gaz_trans_new.drop_duplicates(subset=['Номер карты', 'Дата транзакции', 'Товар', 'Количество'], inplace=True)
     gaz_trans_new.dropna(axis='index', how='any', subset='Количество', inplace=True, ignore_index=True)
+
     tranz_summ = time.time() - start_time
 
     gaz_result = {'geo': [],
@@ -446,7 +417,10 @@ def xls_processing():
     k = 0
     j = 0
     start_time = time.time()
-    while j < (len(gaz_trans_new.axes[0]) - 1) or i < (len(gaz_new.axes[0]) - 1):
+    # gaz_new.loc[len(gaz_new.index)] = np.nan
+    # gaz_trans_new.loc[len(gaz_trans_new.index)] = np.nan
+    while j < (len(gaz_trans_new.axes[0])-1) and i < (len(gaz_new.axes[0])-1):
+
         if float(gaz_trans_new.iloc[j]['Номер карты']) % 100000000 == float(gaz_new.iloc[i]['Номер карты']) % 100000000:
             if gaz_trans_new.iloc[j]['Дата транзакции'].normalize() == gaz_new.iloc[i]['Дата заправки'].normalize():
                 if gaz_trans_new.iloc[j]['Количество'] != gaz_new.iloc[i]['Объём топлива'] or gaz_trans_new.iloc[j]['Товар'] != gaz_new.iloc[i]['Марка топлива']:
@@ -559,7 +533,9 @@ def xls_processing():
     print('СУММИРОВАНИЕ ТРАНЗАКЦИЙ %s seconds' % tranz_summ)
     print('СРАВНЕНИЕ %s seconds' % comp)
     print('ИТОГО  %s seconds' % (zv_format + zv_summ + tranz_format + tranz_summ + comp))
+    print('Размер gaz_new: ', len(gaz_new.axes[0]), ' Остановился на ', i)
+    print('Размер gaz_trans_new: ', len(gaz_trans_new.axes[0]), ' Остановился на ', j)
     gaz_result.to_excel('upload\РЕЗУЛЬТАТ.xlsx')
 
-
+    print('ALL-TIME %s sec' % (time.time() - all_time))
     return gaz_result, all_rows, matched_count, unmathed_count, other_count
